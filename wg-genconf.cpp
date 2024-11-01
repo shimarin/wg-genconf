@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     program.add_argument("--peer-pubkey").help("Base64-encoded peer public key");
     program.add_argument("--allowed-ips").help("IPv4 and/or IPv6 address with CIDR mask");
     program.add_argument("--endpoint").help("Hostname or IP address with port");
-    program.add_argument("--persistent-keepalive").scan<'u', unsigned int>().help("Interval in seconds to send keepalive packets");
+    program.add_argument("--persistent-keepalive").help("Interval in seconds to send keepalive packets");
 
     try {
         program.parse_args(argc, argv);
@@ -81,9 +81,15 @@ int main(int argc, char* argv[])
     if (program.present("--privkey")) {
         privkey = program.get<std::string>("--privkey");
     } else {
-        auto [privkey_, pubkey_] = create_new_keypair();
-        privkey = privkey_;
-        pubkey = pubkey_;
+        try {
+            auto [privkey_, pubkey_] = create_new_keypair();
+            privkey = privkey_;
+            pubkey = pubkey_;
+        }
+        catch (const std::runtime_error& err) {
+            std::cerr << err.what() << std::endl;
+            return EXIT_FAILURE;
+        }
     }
 
     std::cout << "PrivateKey = " << privkey << std::endl;
@@ -119,7 +125,7 @@ int main(int argc, char* argv[])
     }
 
     if (program.present("--persistent-keepalive")) {
-        std::cout << "PersistentKeepalive = " << program.get<unsigned int>("--persistent-keepalive") << std::endl;
+        std::cout << "PersistentKeepalive = " << program.get<std::string>("--persistent-keepalive") << std::endl;
     } else {
         std::cout << "#PersistentKeepalive = 25" << std::endl;
     }
